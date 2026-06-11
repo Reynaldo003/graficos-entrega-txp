@@ -1336,7 +1336,8 @@ function ModalRegistroEntrega({ abierto, fechaEntregaInicial, onClose, onGuardad
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:justify-end">
+        
+        <div className="sticky bottom-0 flex flex-col gap-2 border-t border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:justify-end">
           <button
             type="button"
             onClick={limpiarFormulario}
