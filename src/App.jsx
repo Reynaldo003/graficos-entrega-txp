@@ -154,6 +154,14 @@ const ASESORES = [
   "EDGAR JESUS GOMEZ PEREZ",
   "VALERIA ZILLI DURANTE",
   "Idalmy Jiménez",
+  "Carlos Arturo Garces Vengas",
+  "Edgar Omar Noguera Solis",
+  "Javier Perez Meraz",
+  "Luis Armando Almora Perez",
+  "Mara Erubey Soto Villegas",
+  "Sergio Ivan Quintana Martinez",
+  "Sergio Rene Delgado Sarmiento",
+  "Yoseth Ruiz Castellanos",
 ];
 
 function normalizeStr(value) {
