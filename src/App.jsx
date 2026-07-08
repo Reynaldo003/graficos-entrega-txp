@@ -389,6 +389,7 @@ function crearEstadoInicialEntrega(fechaEntrega = "") {
     modelo: "",
     version: "",
     color: "",
+    kilometraje: "",
     fechaEntrega,
     asesorVentas: "",
     comentarios: "",
@@ -420,6 +421,7 @@ function crearPayloadEntrega(form) {
     modelo_version: form.modelo,
     version: form.version,
     color: form.color,
+    kilometraje: form.kilometraje ? Number(form.kilometraje) : null,
     fecha_hora_entrega: form.fechaEntrega || null,
     entrega_reportada: !!form.entregaReportada,
     asesor_ventas: form.asesorVentas,
@@ -1045,7 +1047,7 @@ function LabelModal({ icon, text, required = false }) {
   );
 }
 
-function ModalRegistroEntrega({ abierto, fechaEntregaInicial,  entregasOcupadas = [],onClose, onGuardado }) {
+function ModalRegistroEntrega({ abierto, fechaEntregaInicial, entregasOcupadas = [], onClose, onGuardado }) {
   const [form, setForm] = useState(() =>
     crearEstadoInicialEntrega(fechaEntregaInicial)
   );
@@ -1053,7 +1055,7 @@ function ModalRegistroEntrega({ abierto, fechaEntregaInicial,  entregasOcupadas 
   const [guardando, setGuardando] = useState(false);
   const [errorGeneral, setErrorGeneral] = useState("");
 
- useEffect(() => {
+  useEffect(() => {
     if (!abierto) return;
 
     setForm(crearEstadoInicialEntrega(fechaEntregaInicial));
@@ -1065,7 +1067,7 @@ function ModalRegistroEntrega({ abierto, fechaEntregaInicial,  entregasOcupadas 
     form.fechaEntrega
   );
 
-  
+
   const horasOcupadas = useMemo(() => {
     if (!diaSeleccionado) return new Set();
 
@@ -1356,7 +1358,40 @@ function ModalRegistroEntrega({ abierto, fechaEntregaInicial,  entregasOcupadas 
               </select>
             </CampoModal>
 
-           <div className="md:col-span-2 xl:col-span-3">
+            <CampoModal error={errores.color}>
+              <LabelModal icon={<Palette size={14} />} text="Color" required />
+              <select
+                value={form.color}
+                disabled={deshabilitado}
+                onChange={(e) => setCampo("color", e.target.value)}
+                className={`${inputModalBase} ${errores.color ? "border-red-500" : "border-slate-300"}`}
+              >
+                <option value="">Seleccionar...</option>
+                {COLORES.map((color) => (
+                  <option key={color} value={color}>
+                    {color}
+                  </option>
+                ))}
+              </select>
+            </CampoModal>
+
+            {/* NUEVO CAMPO: Kilometraje */}
+            <CampoModal error={errores.kilometraje}>
+              <LabelModal icon={<Gauge size={14} />} text="Kilometraje" />
+              <input
+                type="number"
+                inputMode="numeric"
+                placeholder="Ej. 15"
+                min={0}
+                step={1}
+                value={form.kilometraje}
+                disabled={deshabilitado}
+                onChange={(e) => setCampo("kilometraje", e.target.value)}
+                className={`${inputModalBase} ${errores.kilometraje ? "border-red-500" : "border-slate-300"}`}
+              />
+            </CampoModal>
+
+            <div className="md:col-span-2 xl:col-span-3">
               <CampoModal error={errores.fechaEntrega}>
                 <LabelModal icon={<Calendar size={14} />} text="Fecha y hora" required />
 
@@ -2398,8 +2433,12 @@ export default function App() {
       a.hora.localeCompare(b.hora)
     );
 
+    const entregasFisicasRealizadas = sorted.filter((row) =>
+      entregaFisicaActiva(row.entrega_reportada)
+    );
+
     const porAsesor = countBy(
-      sorted,
+      entregasFisicasRealizadas,
       (row) => row.asesor_ventas,
       "asesor"
     ).slice(0, 10);
@@ -2410,11 +2449,19 @@ export default function App() {
       "modelo"
     ).slice(0, 10);
 
-    const porTipoVenta = countBy(
-      sorted,
-      (row) => row.tipo_venta,
-      "tipoVenta"
-    ).slice(0, 10);
+    const sinCapturarTipoVenta = sorted.filter(
+      (row) => !normalizeStr(row.tipo_venta)
+    ).length;
+
+    const porTipoVenta = [
+      ...TIPO_VENTA.map((tipo) => ({
+        tipoVenta: tipo,
+        total: sorted.filter(
+          (row) => normalizeKey(row.tipo_venta) === normalizeKey(tipo)
+        ).length,
+      })),
+      { tipoVenta: "Sin capturar", total: sinCapturarTipoVenta },
+    ].sort((a, b) => b.total - a.total);
 
     const porVersion = countBy(sorted, (row) => row.version, "version").slice(
       0,
